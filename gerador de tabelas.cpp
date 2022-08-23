@@ -6,7 +6,7 @@
 
 struct TAmplitude
 {
-	double limitInf, pontoMed, freqRel, freqAcuRel;
+	double limitInf, pontoMed, freqRelPor, freqRelDec, freqAcuRel;
 	int freqAbs, freqAcu;
 };
 
@@ -18,7 +18,7 @@ int main (void)
 	char resp, novoLim;
 	bool arqExiste;
 	double dado, limInf, limSup, amp, pntMed;
-	double *listaDados, totfri;
+	double *listaDados, totfriPor, totfriDec;
 	int i, iAux, sobreInt, numDados, numInt, ampInt, totfi;
 	TAmplitude *amplit;
 	FILE *Arq;
@@ -95,7 +95,7 @@ int main (void)
 
 		novoLim = 'n';
 
-		printf("\nO valor de Limite Inferior encontrado foi %5.2lf\n", limInf);
+		printf("\nO valor de Limite Inferior encontrado foi %.2lf\n", limInf);
 		printf("Deseja alterar esse valor? [s/N]: ");
 		scanf(" %c", & novoLim);
 
@@ -104,7 +104,13 @@ int main (void)
 		if (novoLim == 's' || novoLim == 'S')
 		{
 			printf("\nInsira o novo Limite Inferior: ");
-			scanf(" %lf", & limInf);
+			scanf(" %lf", & limInf);	
+
+			while (limInf >= limSup)
+			{
+				printf("Insira o novo Limite Inferior: ");
+				scanf(" %lf", & limInf);	
+			}
 
 			i++;
 
@@ -173,7 +179,7 @@ int main (void)
 
 
 		// filtrando a lista de dados de acordo com a preferência de intervalo do usuário para conseguir os números de ocorrências
-		// pertinentes à cada amplitude, assim como também obtendo os valores das Frequências Absoluta (fi) e Relativa (fri)
+		// pertinentes à cada amplitude, assim como também obtendo os valores das Frequências Absoluta (fi) e Relativa (fri, decimal e percentual)
 
 
 		if (sobreInt == 1)
@@ -185,7 +191,8 @@ int main (void)
 					if (listaDados[i] >= amplit[iAux].limitInf && listaDados[i] < amplit[iAux + 1].limitInf)
 					{
 						amplit[iAux].freqAbs++;
-						amplit[iAux].freqRel = (amplit[iAux].freqAbs / double(numDados)) * 100.0;
+						amplit[iAux].freqRelDec = amplit[iAux].freqAbs / double(numDados);
+						amplit[iAux].freqRelPor = (amplit[iAux].freqAbs / double(numDados)) * 100.0;
 					}
 				}
 			}
@@ -199,7 +206,8 @@ int main (void)
 					if (listaDados[i] > amplit[iAux].limitInf && listaDados[i] <= amplit[iAux + 1].limitInf)
 					{
 						amplit[iAux].freqAbs++;
-						amplit[iAux].freqRel = (amplit[iAux].freqAbs / double(numDados)) * 100.0;
+						amplit[iAux].freqRelDec = amplit[iAux].freqAbs / double(numDados);
+						amplit[iAux].freqRelPor = (amplit[iAux].freqAbs / double(numDados)) * 100.0;
 					}
 				}
 			}
@@ -213,96 +221,98 @@ int main (void)
 		// calculando os valores relacionados às Frequências Acumulada (Fi) e Acumulada Relativa (Fri)
 
 		totfi = 0;
-		totfri = 0.0;
+		totfriDec = 0.0;
+		totfriPor = 0.0;
 
 		amplit[0].freqAcu = amplit[0].freqAbs;
-		amplit[0].freqAcuRel = amplit[0].freqRel;
+		amplit[0].freqAcuRel = amplit[0].freqRelPor;
 
 		for (i = 0; i < numInt; i++)
 		{
 			totfi += amplit[i].freqAbs;
-			totfri += amplit[i].freqRel;
+			totfriDec += amplit[i].freqRelDec;
+			totfriPor += amplit[i].freqRelPor;
 			amplit[i + 1].freqAcu = amplit[i].freqAcu + amplit[i + 1].freqAbs;
-			amplit[i + 1].freqAcuRel = amplit[i].freqAcuRel + amplit[i + 1].freqRel;
+			amplit[i + 1].freqAcuRel = amplit[i].freqAcuRel + amplit[i + 1].freqRelPor;
 		}
 
 
 
 		// exibindo ao usuário os valores obtidos (em relação aos intervalos) das variáveis Amplitude (hk), Ponto Médio (xi),
-		// Frequência Absoluta (fi), Frequência Relativa (fri), Frequência Acumulada (Fi) e Frequência Acumulada Relativa (%) (Fri)
+		// Frequência Absoluta (fi), Frequência Relativa (fri, decimal e percentual), Frequência Acumulada (Fi) e Frequência Acumulada Relativa (%) (Fri)
 
 
-		printf("\n       Arquivo salvo como: %-40s\n", arquivoSaida);
-		printf("__________________________________________________________________\n\n");
-		printf("         hk            xi       fi      fri       Fi       Fri\n");
-		printf("__________________________________________________________________\n\n");
+		printf("\n                Arquivo salvo como: %-40s\n", arquivoSaida);
+		printf("_______________________________________________________________________________\n\n");
+		printf("         hk            xi       fi        fri        %%        Fi        Fri\n");
+		printf("_______________________________________________________________________________\n\n");
 		if (sobreInt == 1)
 		{
 			for (i = 0; i < numInt; i++)
-				printf("   %5.1lf |- %5.1lf    %5.1lf     %4d    %5.2lf    %4d     %6.2lf\n", amplit[i].limitInf, amplit[i + 1].limitInf, amplit[i].pontoMed, amplit[i].freqAbs, amplit[i].freqRel, amplit[i].freqAcu, amplit[i].freqAcuRel);	
+				printf("   %5.1lf |- %5.1lf    %5.1lf     %4d     %5.4lf     %5.2lf     %4d     %6.2lf\n", amplit[i].limitInf, amplit[i + 1].limitInf, amplit[i].pontoMed, amplit[i].freqAbs, amplit[i].freqRelDec, amplit[i].freqRelPor, amplit[i].freqAcu, amplit[i].freqAcuRel);	
 		}
 		else
 		{
 			for (i = 0; i < numInt; i++)
-				printf("   %5.1lf -| %5.1lf    %5.1lf     %4d    %5.2lf    %4d     %6.2lf\n", amplit[i].limitInf, amplit[i + 1].limitInf, amplit[i].pontoMed, amplit[i].freqAbs, amplit[i].freqRel, amplit[i].freqAcu, amplit[i].freqAcuRel);	
+				printf("   %5.1lf -| %5.1lf    %5.1lf     %4d     %5.4lf     %5.2lf     %4d     %6.2lf\n", amplit[i].limitInf, amplit[i + 1].limitInf, amplit[i].pontoMed, amplit[i].freqAbs, amplit[i].freqRelDec, amplit[i].freqRelPor, amplit[i].freqAcu, amplit[i].freqAcuRel);	
 		}
-		printf("__________________________________________________________________\n\n");
-		printf("       Total           --     %4d    %5.2lf      --       --- \n", totfi, totfri);
-		printf("__________________________________________________________________\n");
-
-
-
-		// exibindo ao usuário os valores obtidos (em relação à lista geral de dados) das variáveis Amplitude (hk), Ponto Médio (xi),
-		// Frequência Absoluta (fi), Frequência Relativa (fri), Frequência Acumulada (Fi) e Frequência Acumulada Relativa (%) (Fri)
-
-
-		printf("\n   n   =   %5d   |    Número de Dados\n", numDados);
-		printf("   li  =   %5.1lf   |    Limite Inferior\n", limInf);
-		printf("   Li  =   %5.1lf   |    Limite Superior\n", limSup);
-		printf("   h   =   %5.1lf   |    Amplitude\n", amp);
-		printf("   xi  =  %6.2lf   |    Ponto Médio\n", pntMed);
-		printf("   k   =   %5d   |    Número de intervalos\n", numInt);
-		printf("   hk  =   %5d   |    Amplitude dos intervalos\n\n", ampInt);
+		printf("_______________________________________________________________________________\n\n");
+		printf("        Total          --     %4d      %5.4lf    %5.2lf      --        --- \n", totfi, totfriDec, totfriPor);
+		printf("_______________________________________________________________________________\n");
 
 
 
 		// escrevendo em disco os valores obtidos (em relação aos intervalos) das variáveis Amplitude (hk), Ponto Médio (xi),
-		// Frequência Absoluta (fi), Frequência Relativa (fri), Frequência Acumulada (Fi) e Frequência Acumulada Relativa (%) (Fri)
+		// Frequência Absoluta (fi), Frequência Relativa (fri, decimal e percentual), Frequência Acumulada (Fi) e Frequência Acumulada Relativa (%) (Fri)
 
 
 		Arq = fopen(arquivoSaida, "w");
 
-		fprintf(Arq, "\n    %49s\n", arquivoSaida);
-		fprintf(Arq,"__________________________________________________________________\n\n");
-		fprintf(Arq,"         hk            xi       fi      fri       Fi       Fri\n");
-		fprintf(Arq,"__________________________________________________________________\n\n");
+		fprintf(Arq, "\n                                    %-40s\n", arquivoSaida);
+		fprintf(Arq,"_______________________________________________________________________________\n\n");
+		fprintf(Arq,"         hk            xi       fi        fri        %%        Fi        Fri\n");
+		fprintf(Arq,"_______________________________________________________________________________\n\n");
 		if (sobreInt == 1)
 		{
 			for (i = 0; i < numInt; i++)
-				fprintf(Arq,"   %5.1lf |- %5.1lf    %5.1lf     %4d    %5.2lf    %4d     %6.2lf\n", amplit[i].limitInf, amplit[i + 1].limitInf, amplit[i].pontoMed, amplit[i].freqAbs, amplit[i].freqRel, amplit[i].freqAcu, amplit[i].freqAcuRel);	
+				fprintf(Arq,"   %5.1lf |- %5.1lf    %5.1lf     %4d     %5.4lf     %5.2lf     %4d     %6.2lf\n", amplit[i].limitInf, amplit[i + 1].limitInf, amplit[i].pontoMed, amplit[i].freqAbs, amplit[i].freqRelDec, amplit[i].freqRelPor, amplit[i].freqAcu, amplit[i].freqAcuRel);	
 		}
 		else
 		{
 			for (i = 0; i < numInt; i++)
-				fprintf(Arq,"   %5.1lf -| %5.1lf    %5.1lf     %4d    %5.2lf    %4d     %6.2lf\n", amplit[i].limitInf, amplit[i + 1].limitInf, amplit[i].pontoMed, amplit[i].freqAbs, amplit[i].freqRel, amplit[i].freqAcu, amplit[i].freqAcuRel);	
+				fprintf(Arq,"   %5.1lf -| %5.1lf    %5.1lf     %4d     %5.4lf     %5.2lf     %4d     %6.2lf\n", amplit[i].limitInf, amplit[i + 1].limitInf, amplit[i].pontoMed, amplit[i].freqAbs, amplit[i].freqRelDec, amplit[i].freqRelPor, amplit[i].freqAcu, amplit[i].freqAcuRel);	
 		}
-		fprintf(Arq,"__________________________________________________________________\n\n");
-		fprintf(Arq,"       Total           --     %4d    %5.2lf      --       --- \n", totfi, totfri);
-		fprintf(Arq,"__________________________________________________________________\n");
+		fprintf(Arq,"_______________________________________________________________________________\n\n");
+		fprintf(Arq,"        Total          --     %4d      %5.4lf    %5.2lf      --        --- \n", totfi, totfriDec, totfriPor);
+		fprintf(Arq,"_______________________________________________________________________________\n\n");
+
+
+
+		// exibindo ao usuário os valores obtidos (em relação à lista geral de dados) das variáveis Amplitude (hk), Ponto Médio (xi),
+		// Frequência Absoluta (fi), Frequência Relativa (fri, decimal e percentual), Frequência Acumulada (Fi) e Frequência Acumulada Relativa (%) (Fri)
+
+
+		printf("\n    n   =   %5d   |    Número de Dados\n", numDados);
+		printf("    li  =   %5.1lf   |    Limite Inferior\n", limInf);
+		printf("    Li  =   %5.1lf   |    Limite Superior\n", limSup);
+		printf("    h   =   %5.1lf   |    Amplitude\n", amp);
+		printf("    xi  =  %6.2lf   |    Ponto Médio\n", pntMed);
+		printf("    k   =   %5d   |    Número de intervalos\n", numInt);
+		printf("    hk  =   %5d   |    Amplitude dos intervalos\n\n", ampInt);
 
 
 
 		// escrevendo em disco os valores obtidos (em relação à lista geral de dados) das variáveis Amplitude (hk), Ponto Médio (xi),
-		// Frequência Absoluta (fi), Frequência Relativa (fri), Frequência Acumulada (Fi) e Frequência Acumulada Relativa (%) (Fri)
+		// Frequência Absoluta (fi), Frequência Relativa (fri, decimal e percentual), Frequência Acumulada (Fi) e Frequência Acumulada Relativa (%) (Fri)
 
 
-		fprintf(Arq,"\n   n   =   %5d   |    Número de Dados\n", numDados);
-		fprintf(Arq,"   li  =   %5.1lf   |    Limite Inferior\n", limInf);
-		fprintf(Arq,"   Li  =   %5.1lf   |    Limite Superior\n", limSup);
-		fprintf(Arq,"   h   =   %5.1lf   |    Amplitude\n", amp);
-		fprintf(Arq,"   xi  =  %6.2lf   |    Ponto Médio\n", pntMed);
-		fprintf(Arq,"   k   =   %5d   |    Número de intervalos\n", numInt);
-		fprintf(Arq,"   hk  =   %5d   |    Amplitude dos intervalos", ampInt);
+		fprintf(Arq,"\n    n   =   %5d   |    Número de Dados\n", numDados);
+		fprintf(Arq,"    li  =   %5.1lf   |    Limite Inferior\n", limInf);
+		fprintf(Arq,"    Li  =   %5.1lf   |    Limite Superior\n", limSup);
+		fprintf(Arq,"    h   =   %5.1lf   |    Amplitude\n", amp);
+		fprintf(Arq,"    xi  =  %6.2lf   |    Ponto Médio\n", pntMed);
+		fprintf(Arq,"    k   =   %5d   |    Número de intervalos\n", numInt);
+		fprintf(Arq,"    hk  =   %5d   |    Amplitude dos intervalos", ampInt);
 
 		fclose(Arq);
 
@@ -311,7 +321,7 @@ int main (void)
 
 		resp = ' ';
 
-		printf("   Deseja gerar outra tabela? [s/n]: ");
+		printf("\n    Deseja gerar outra tabela? [s/n]: ");
 		scanf(" %c", & resp);
 	}
 
