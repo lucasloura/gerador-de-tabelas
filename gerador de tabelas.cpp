@@ -43,10 +43,12 @@ int main (void)
 
 		while (!arqExiste)
 		{
-			printf("Insira o nome + a extensão do arquivo a ser lido: ");
+			printf("Insira o nome do arquivo a ser lido: ");
 			scanf(" %40[^\n]", arquivo);
 	
 			if (Arq = fopen(arquivo, "r"))
+				arqExiste = true;
+			else if (Arq = fopen(strcat(arquivo, ".txt"), "r"))
 				arqExiste = true;
 		}
 
@@ -61,8 +63,16 @@ int main (void)
 		// e do Limite superior (Li), além de já fechar o arquivo de texto
 
 
-		numDados = 0;
 		listaDados = NULL;
+
+		fscanf(Arq, " %lf", & dado);
+		numDados = 1;
+
+		listaDados = (double *)realloc(listaDados, sizeof(double) * numDados);
+		listaDados[numDados - 1] = dado;
+
+		limInf = dado;
+		limSup = dado;
 
 		while (fscanf(Arq, " %lf", & dado) != EOF)
 		{
@@ -70,18 +80,10 @@ int main (void)
 			listaDados = (double *)realloc(listaDados, sizeof(double) * numDados);
 			listaDados[numDados - 1] = dado;
 
-			if (numDados == 1)
-			{
+			if (dado < limInf)
 				limInf = dado;
+			if (dado > limSup)
 				limSup = dado;
-			}
-			else
-			{
-				if (dado < limInf)
-					limInf = dado;
-				if (dado > limSup)
-					limSup = dado;
-			}
 		}
 
 		fclose(Arq);
@@ -97,11 +99,20 @@ int main (void)
 		printf("Deseja alterar esse valor? [s/N]: ");
 		scanf(" %c", & novoLim);
 
+		i = 0;
+
 		if (novoLim == 's' || novoLim == 'S')
 		{
 			printf("\nInsira o novo Limite Inferior: ");
 			scanf(" %lf", & limInf);
+
+			i++;
+
+			if (i > 5)
+				break;
 		}
+
+		fflush(stdin);
 
 		printf("\nSobre o intervalo dos valores reais:\n");
 		printf("[1] A |- B (Fechado em A e aberto em B)\n");
@@ -120,6 +131,8 @@ int main (void)
 				break;	
 
 		} while (sobreInt != 1 && sobreInt != 2);
+
+		fflush(stdin);
 
 		system("cls");
 
@@ -219,7 +232,7 @@ int main (void)
 		// Frequência Absoluta (fi), Frequência Relativa (fri), Frequência Acumulada (Fi) e Frequência Acumulada Relativa (%) (Fri)
 
 
-		printf("\n    %40s\n", arquivoSaida);
+		printf("\n       Arquivo salvo como: %-40s\n", arquivoSaida);
 		printf("__________________________________________________________________\n\n");
 		printf("         hk            xi       fi      fri       Fi       Fri\n");
 		printf("__________________________________________________________________\n\n");
