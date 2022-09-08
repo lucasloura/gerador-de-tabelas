@@ -1,5 +1,5 @@
 
-                                    tabela alturas.txt                      
+                                    alturas.txt                             
 _______________________________________________________________________________
 
          hk            xi       fi        fri        %        Fi        Fri
@@ -23,6 +23,6 @@ _______________________________________________________________________________
     li  =   150,0   |    Limite Inferior
     Li  =   204,0   |    Limite Superior
     h   =    54,0   |    Amplitude
-    xi  =  177,00   |    Ponto Médio
+    xi  =    0,00   |    Ponto Médio
     k   =       8   |    Número de intervalos
     hk  =       7   |    Amplitude dos intervalos
